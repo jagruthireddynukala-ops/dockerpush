@@ -4,28 +4,25 @@ on:
   push:
     branches:
       - main
-   workflow_dispatch:
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-
-      # Get the latest code from GitHub
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Copy compose.yaml to the Azure VM
       - name: Copy compose.yaml to VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           password: ${{ secrets.VM_PASSWORD }}
-          source: "compose.yaml"
-          target: "/home/azureadmin/nginx-app"
+          source: compose.yaml
+          target: /home/azureadmin/nginx-app
 
-      # Run Docker Compose on the VM
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -34,15 +31,11 @@ jobs:
           password: ${{ secrets.VM_PASSWORD }}
           script: |
             cd /home/azureadmin/nginx-app
-
             echo "Stopping existing containers..."
             sudo docker compose down
-
             echo "Pulling latest images..."
             sudo docker compose pull
-
             echo "Starting updated containers..."
             sudo docker compose up -d
-
             echo "Checking running containers..."
             sudo docker ps
